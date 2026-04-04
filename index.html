@@ -5,20 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adhésion K2A Corporate</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <style>
         :root { --primary: #0088cc; --bg: #f4f4f9; --text: #333; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { color: var(--primary); text-align: center; margin-bottom: 20px; }
-        .group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .error { color: #d9534f; font-size: 0.8em; margin-top: 5px; display: none; }
-        .cgu { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85em; margin-top: 20px; }
-        .cgu input { width: auto; margin-top: 3px; }
-        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; }
+        .container { max-width: 450px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: var(--primary); text-align: center; font-size: 1.4em; }
+        .group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.85em; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .iti { width: 100%; }
+        .error { color: #d9534f; font-size: 0.75em; margin-top: 4px; display: none; }
+        .cgu { display: flex; gap: 8px; font-size: 0.8em; margin-top: 15px; align-items: flex-start; }
+        #manualCountryGroup, #otherBrokerGroup { display: none; background: #f0f7ff; padding: 10px; border-radius: 6px; margin-top: 5px; border-left: 3px solid var(--primary); }
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 0.95em; font-weight: bold; cursor: pointer; margin-top: 15px; }
         button:disabled { background: #ccc; cursor: not-allowed; }
-        #otherBrokerGroup { display: none; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -26,53 +28,40 @@
 <div class="container">
     <h2>📋 FORMULAIRE D'ADHÉSION</h2>
     <form id="adhForm">
-        <div class="group">
-            <label>Nom</label>
-            <input type="text" id="nom" required placeholder="Ex: KOTCHIKPA">
-        </div>
-        <div class="group">
-            <label>Prénom</label>
-            <input type="text" id="prenom" required placeholder="Ex: Jean">
-        </div>
-        <div class="group">
-            <label>Email</label>
-            <input type="email" id="email" required placeholder="nom@exemple.com">
-        </div>
+        <div class="group"><label>Nom</label><input type="text" id="nom" required></div>
+        <div class="group"><label>Prénom</label><input type="text" id="prenom" required></div>
+        <div class="group"><label>Email</label><input type="email" id="email" required></div>
+        
         <div class="group">
             <label>Téléphone (WhatsApp)</label>
-            <input type="tel" id="tel" required placeholder="+229 ...">
+            <input type="tel" id="tel" required>
+            <p style="font-size: 0.7em; color: #666; margin-top: 2px;">Si votre pays n'est pas dans la liste, tapez le numéro complet avec +code.</p>
         </div>
+
         <div class="group">
             <label>Date de Naissance</label>
             <input type="date" id="dob" required>
-            <div id="ageError" class="error">⚠️ Vous devez avoir au moins 21 ans révolus pour adhérer.</div>
+            <div id="ageError" class="error">⚠️ Vous devez avoir 21 ans révolus à ce jour.</div>
         </div>
+
         <div class="group">
-            <label>Broker (Courtier)</label>
-            <select id="broker" required onchange="toggleOtherBroker()">
-                <option value="">-- Choisissez votre Broker --</option>
+            <label>Broker</label>
+            <select id="broker" required onchange="toggleOther('broker', 'otherBrokerGroup')">
+                <option value="">-- Choisir --</option>
                 <option value="Deriv">Deriv</option>
-                <option value="Weltrade">Weltrade</option>
-                <option value="XM">XM</option>
                 <option value="Exness">Exness</option>
+                <option value="Vantage">Vantage</option>
                 <option value="Autre">Autre (Préciser)</option>
             </select>
-            <div id="otherBrokerGroup">
-                <input type="text" id="otherBrokerName" placeholder="Nom du broker...">
-            </div>
+            <div id="otherBrokerGroup"><input type="text" id="otherBrokerName" placeholder="Nom du broker..."></div>
         </div>
-        <div class="group">
-            <label>Numéro Compte Démo</label>
-            <input type="number" id="demo" required placeholder="Ex: 1234567">
-        </div>
-        <div class="group">
-            <label>Numéro Compte Réel</label>
-            <input type="number" id="real" required placeholder="Ex: 8876543">
-        </div>
+
+        <div class="group"><label>Compte Démo</label><input type="number" id="demo" required></div>
+        <div class="group"><label>Compte Réel</label><input type="number" id="real" required></div>
 
         <div class="cgu">
             <input type="checkbox" id="cguCheck" required>
-            <label for="cguCheck">Je confirme avoir lu et accepté les <a href="https://k2a-corporate.github.io/Documentations/Conditions%20G%C3%A9n%C3%A9rales%20d'Utilisation" target="_blank">Conditions Générales d'Utilisation</a> de K2A Corporate.</label>
+            <label>Je confirme avoir lu et accepté les <a href="https://k2a-corporate.github.io/Documentations/Conditions%20G%C3%A9n%C3%A9rales%20d'Utilisation" target="_blank">CGU</a> de K2A Corporate.</label>
         </div>
 
         <button type="submit" id="submitBtn" disabled>SOUMETTRE MON ADHÉSION</button>
@@ -83,64 +72,59 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    function toggleOtherBroker() {
-        const brokerSelect = document.getElementById('broker');
-        const otherGroup = document.getElementById('otherBrokerGroup');
-        const otherInput = document.getElementById('otherBrokerName');
-        
-        if (brokerSelect.value === "Autre") {
-            otherGroup.style.display = 'block';
-            otherInput.required = true;
-        } else {
-            otherGroup.style.display = 'none';
-            otherInput.required = false;
-        }
+    // Configuration de la bibliothèque de pays/téléphone
+    const phoneInput = document.querySelector("#tel");
+    const iti = window.intlTelInput(phoneInput, {
+        initialCountry: "auto",
+        separateDialCode: true, // Affiche le +code à côté du drapeau
+        geoIpLookup: callback => {
+            fetch('https://ipapi.co/json/').then(res => res.json()).then(data => callback(data.country_code)).catch(() => callback("bj"));
+        },
+        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+    });
+
+    function toggleOther(selectId, targetId) {
+        const val = document.getElementById(selectId).value;
+        document.getElementById(targetId).style.display = (val === "Autre") ? 'block' : 'none';
     }
 
-    function validateForm() {
-        const dobValue = document.getElementById('dob').value;
-        const cguChecked = document.getElementById('cguCheck').checked;
-        const submitBtn = document.getElementById('submitBtn');
-        const ageError = document.getElementById('ageError');
+    function validate() {
+        const dob = document.getElementById('dob').value;
+        const cgu = document.getElementById('cguCheck').checked;
+        const btn = document.getElementById('submitBtn');
+        const err = document.getElementById('ageError');
 
-        if (!dobValue) {
-            submitBtn.disabled = true;
-            return;
-        }
+        if(!dob) { btn.disabled = true; return; }
 
-        // --- CALCUL DE L'ÂGE PAR RAPPORT À LA DATE DU JOUR ---
-        const birthDate = new Date(dobValue);
+        const birth = new Date(dob);
         const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
+        let age = today.getFullYear() - birth.getFullYear();
+        if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) age--;
 
         const isAdult = (age >= 21);
-        ageError.style.display = isAdult ? 'none' : 'block';
-        submitBtn.disabled = !(isAdult && cguChecked);
+        err.style.display = isAdult ? 'none' : 'block';
+        btn.disabled = !(isAdult && cgu);
     }
 
-    document.getElementById('dob').addEventListener('change', validateForm);
-    document.getElementById('cguCheck').addEventListener('change', validateForm);
+    document.getElementById('dob').addEventListener('change', validate);
+    document.getElementById('cguCheck').addEventListener('change', validate);
 
     document.getElementById('adhForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        let finalBroker = document.getElementById('broker').value;
-        if(finalBroker === "Autre") {
-            finalBroker = document.getElementById('otherBrokerName').value;
-        }
-
+        // Récupération des données finales
+        const countryData = iti.getSelectedCountryData();
+        const fullNumber = iti.getNumber();
+        
         const data = {
             tg_id: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "Inconnu",
-            nom: document.getElementById('nom').value,
+            nom: document.getElementById('nom').value.toUpperCase(),
             prenom: document.getElementById('prenom').value,
             email: document.getElementById('email').value,
-            tel: document.getElementById('tel').value,
+            tel: fullNumber,
+            pays: countryData.name || "Inconnu",
             dob: document.getElementById('dob').value,
-            broker: finalBroker,
+            broker: document.getElementById('broker').value === "Autre" ? document.getElementById('otherBrokerName').value : document.getElementById('broker').value,
             demo: document.getElementById('demo').value,
             real: document.getElementById('real').value
         };
@@ -149,18 +133,11 @@
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
-        })
-        .then(response => {
-            if(response.ok) {
-                tg.showAlert("Inscription K2A envoyée avec succès !");
-                tg.close(); 
-            }
-        })
-        .catch(error => {
-            tg.showAlert("Erreur réseau. Veuillez réessayer.");
-        });
+        }).then(() => { 
+            tg.showAlert("✅ Adhésion K2A transmise !"); 
+            tg.close(); 
+        }).catch(() => tg.showAlert("❌ Erreur d'envoi."));
     });
 </script>
-
 </body>
 </html>
