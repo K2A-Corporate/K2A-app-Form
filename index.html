@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adhésion K2A Corporate</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --primary: #0088cc; --bg: #f4f4f9; --text: #333; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: var(--primary); text-align: center; margin-bottom: 20px; }
+        .group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .error { color: #d9534f; font-size: 0.8em; margin-top: 5px; display: none; }
+        .cgu { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85em; margin-top: 20px; }
+        .cgu input { width: auto; margin-top: 3px; }
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📋 FORMULAIRE D'ADHÉSION</h2>
+    <form id="adhForm">
+        <div class="group">
+            <label>Nom</label>
+            <input type="text" id="nom" required placeholder="Ex: KOTCHIKPA">
+        </div>
+        <div class="group">
+            <label>Prénom</label>
+            <input type="text" id="prenom" required placeholder="Ex: Jean">
+        </div>
+        <div class="group">
+            <label>Email</label>
+            <input type="email" id="email" required placeholder="nom@exemple.com">
+        </div>
+        <div class="group">
+            <label>Téléphone (WhatsApp)</label>
+            <input type="tel" id="tel" required placeholder="+229 ...">
+        </div>
+        <div class="group">
+            <label>Date de Naissance</label>
+            <input type="date" id="dob" required onchange="checkAge()">
+            <div id="ageError" class="error">⚠️ Vous devez avoir au moins 21 ans au 31 décembre de l'année écoulée.</div>
+        </div>
+        <div class="group">
+            <label>Broker (Courtier)</label>
+            <select id="broker" required>
+                <option value="">-- Choisissez votre Broker --</option>
+                <option value="Deriv">Deriv</option>
+                <option value="Exness">Exness</option>
+                <option value="Vantage">Vantage</option>
+                <option value="Autre">Autre</option>
+            </select>
+        </div>
+        <div class="group">
+            <label>Numéro Compte Démo</label>
+            <input type="number" id="demo" required placeholder="Ex: 1234567">
+        </div>
+        <div class="group">
+            <label>Numéro Compte Réel</label>
+            <input type="number" id="real" required placeholder="Ex: 8876543">
+        </div>
+
+        <div class="cgu">
+            <input type="checkbox" id="cguCheck" required>
+            <label for="cguCheck">Je confirme avoir lu et accepté les <a href="LIEN_VERS_TES_CGU" target="_blank">Conditions Générales d'Utilisation</a> de K2A Corporate.</label>
+        </div>
+
+        <button type="submit" id="submitBtn" disabled>SOUMETTRE MON ADHÉSION</button>
+    </form>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // Ouvre la WebApp en plein écran
+
+    function validateForm() {
+        const dobValue = document.getElementById('dob').value;
+        const cguChecked = document.getElementById('cguCheck').checked;
+        const submitBtn = document.getElementById('submitBtn');
+        const ageError = document.getElementById('ageError');
+
+        if (!dobValue) {
+            submitBtn.disabled = true;
+            return;
+        }
+
+        // --- CALCUL DE L'ÂGE AU 31 DÉCEMBRE DE L'ANNÉE ÉCOULÉE ---
+        const birthDate = new Date(dobValue);
+        const today = new Date();
+        const lastYearDec31 = new Date(today.getFullYear() - 1, 11, 31);
+        
+        let age = lastYearDec31.getFullYear() - birthDate.getFullYear();
+        const m = lastYearDec31.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && lastYearDec31.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        // --- CONDITION : 21 ANS RÉVOLUS + CASE COCHÉE ---
+        const isAdult = (age >= 21);
+        
+        if (!isAdult) {
+            ageError.style.display = 'block';
+        } else {
+            ageError.style.display = 'none';
+        }
+
+        // Le bouton s'active UNIQUEMENT si l'âge est OK ET la case cochée
+        submitBtn.disabled = !(isAdult && cguChecked);
+    }
+
+    // On écoute les changements sur la date ET sur la case à cocher
+    document.getElementById('dob').addEventListener('change', validateForm);
+    document.getElementById('cguCheck').addEventListener('change', validateForm);
+
+    document.getElementById('adhForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const data = {
+            tg_id: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "Inconnu",
+            nom: document.getElementById('nom').value,
+            prenom: document.getElementById('prenom').value,
+            email: document.getElementById('email').value,
+            tel: document.getElementById('tel').value,
+            dob: document.getElementById('dob').value,
+            broker: document.getElementById('broker').value,
+            demo: document.getElementById('demo').value,
+            real: document.getElementById('real').value
+        };
+
+        // Envoi des données à ton Webhook Make
+        fetch('TON_WEBHOOK_MAKE', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if(response.ok) {
+                tg.showAlert("Inscription envoyée avec succès !");
+                tg.close(); 
+            }
+        })
+        .catch(error => {
+            tg.showAlert("Erreur lors de l'envoi. Réessayez.");
+        });
+    });
+</script>
+
+</body>
+</html>
