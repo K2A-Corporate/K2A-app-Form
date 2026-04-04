@@ -18,6 +18,7 @@
         .cgu input { width: auto; margin-top: 3px; }
         button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
         button:disabled { background: #ccc; cursor: not-allowed; }
+        #otherBrokerGroup { display: none; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -43,18 +44,21 @@
         </div>
         <div class="group">
             <label>Date de Naissance</label>
-            <input type="date" id="dob" required onchange="checkAge()">
-            <div id="ageError" class="error">⚠️ Vous devez avoir au moins 21 ans au 31 décembre de l'année écoulée.</div>
+            <input type="date" id="dob" required>
+            <div id="ageError" class="error">⚠️ Vous devez avoir au moins 21 ans révolus pour adhérer.</div>
         </div>
         <div class="group">
             <label>Broker (Courtier)</label>
-            <select id="broker" required>
+            <select id="broker" required onchange="toggleOtherBroker()">
                 <option value="">-- Choisissez votre Broker --</option>
                 <option value="Deriv">Deriv</option>
                 <option value="Exness">Exness</option>
                 <option value="Vantage">Vantage</option>
-                <option value="Autre">Autre</option>
+                <option value="Autre">Autre (Préciser)</option>
             </select>
+            <div id="otherBrokerGroup">
+                <input type="text" id="otherBrokerName" placeholder="Nom du broker...">
+            </div>
         </div>
         <div class="group">
             <label>Numéro Compte Démo</label>
@@ -67,7 +71,7 @@
 
         <div class="cgu">
             <input type="checkbox" id="cguCheck" required>
-            <label for="cguCheck">Je confirme avoir lu et accepté les <a href="LIEN_VERS_TES_CGU" target="_blank">Conditions Générales d'Utilisation</a> de K2A Corporate.</label>
+            <label for="cguCheck">Je confirme avoir lu et accepté les <a href="https://k2a-corporate.github.io/Documentations/Conditions%20G%C3%A9n%C3%A9rales%20d'Utilisation" target="_blank">Conditions Générales d'Utilisation</a> de K2A Corporate.</label>
         </div>
 
         <button type="submit" id="submitBtn" disabled>SOUMETTRE MON ADHÉSION</button>
@@ -76,7 +80,21 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    tg.expand(); // Ouvre la WebApp en plein écran
+    tg.expand();
+
+    function toggleOtherBroker() {
+        const brokerSelect = document.getElementById('broker');
+        const otherGroup = document.getElementById('otherBrokerGroup');
+        const otherInput = document.getElementById('otherBrokerName');
+        
+        if (brokerSelect.value === "Autre") {
+            otherGroup.style.display = 'block';
+            otherInput.required = true;
+        } else {
+            otherGroup.style.display = 'none';
+            otherInput.required = false;
+        }
+    }
 
     function validateForm() {
         const dobValue = document.getElementById('dob').value;
@@ -89,37 +107,31 @@
             return;
         }
 
-        // --- CALCUL DE L'ÂGE AU 31 DÉCEMBRE DE L'ANNÉE ÉCOULÉE ---
+        // --- CALCUL DE L'ÂGE PAR RAPPORT À LA DATE DU JOUR ---
         const birthDate = new Date(dobValue);
         const today = new Date();
-        const lastYearDec31 = new Date(today.getFullYear() - 1, 11, 31);
-        
-        let age = lastYearDec31.getFullYear() - birthDate.getFullYear();
-        const m = lastYearDec31.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && lastYearDec31.getDate() < birthDate.getDate())) {
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
             age--;
         }
 
-        // --- CONDITION : 21 ANS RÉVOLUS + CASE COCHÉE ---
         const isAdult = (age >= 21);
-        
-        if (!isAdult) {
-            ageError.style.display = 'block';
-        } else {
-            ageError.style.display = 'none';
-        }
-
-        // Le bouton s'active UNIQUEMENT si l'âge est OK ET la case cochée
+        ageError.style.display = isAdult ? 'none' : 'block';
         submitBtn.disabled = !(isAdult && cguChecked);
     }
 
-    // On écoute les changements sur la date ET sur la case à cocher
     document.getElementById('dob').addEventListener('change', validateForm);
     document.getElementById('cguCheck').addEventListener('change', validateForm);
 
     document.getElementById('adhForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
+        let finalBroker = document.getElementById('broker').value;
+        if(finalBroker === "Autre") {
+            finalBroker = document.getElementById('otherBrokerName').value;
+        }
+
         const data = {
             tg_id: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "Inconnu",
             nom: document.getElementById('nom').value,
@@ -127,25 +139,24 @@
             email: document.getElementById('email').value,
             tel: document.getElementById('tel').value,
             dob: document.getElementById('dob').value,
-            broker: document.getElementById('broker').value,
+            broker: finalBroker,
             demo: document.getElementById('demo').value,
             real: document.getElementById('real').value
         };
 
-        // Envoi des données à ton Webhook Make
-        fetch('TON_WEBHOOK_MAKE', {
+        fetch('https://hook.eu1.make.com/jdvaj34fg72docjmh2p6a4oguyb53ssk', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
         })
         .then(response => {
             if(response.ok) {
-                tg.showAlert("Inscription envoyée avec succès !");
+                tg.showAlert("Inscription K2A envoyée avec succès !");
                 tg.close(); 
             }
         })
         .catch(error => {
-            tg.showAlert("Erreur lors de l'envoi. Réessayez.");
+            tg.showAlert("Erreur réseau. Veuillez réessayer.");
         });
     });
 </script>
