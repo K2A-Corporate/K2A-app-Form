@@ -8,9 +8,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <style>
-        :root { --primary: #0088cc; --bg: #f4f4f9; --text: #333; }
+        /* Fond Bleu Royal */
+        :root { --primary: #0088cc; --bg: #4169E1; --text: #333; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         h2 { color: var(--primary); text-align: center; margin-bottom: 20px; }
         .group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
@@ -22,7 +23,6 @@
         button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
         button:disabled { background: #ccc; cursor: not-allowed; }
         #otherBrokerGroup { display: none; margin-top: 10px; }
-        .file-info { font-size: 0.75em; color: #666; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -50,14 +50,8 @@
 
         <div class="group">
             <label>Date de Naissance</label>
-            <input type="date" id="dob" required>
+            <input type="date" id="DateNaissance" required>
             <div id="ageError" class="error">⚠️ Vous devez avoir au moins 21 ans révolus pour adhérer.</div>
-        </div>
-
-        <div class="group">
-            <label>Pièce d'Identité (Recto/Verso ou PDF)</label>
-            <input type="file" id="idFile" accept="image/*,.pdf" required>
-            <div class="file-info">Format accepté : Photo claire ou PDF. Obligatoire pour vérification.</div>
         </div>
 
         <div class="group">
@@ -96,11 +90,10 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // --- INITIALISATION BIBLIOTHEQUE PAYS (SANS SAISIE MANUELLE DU CODE) ---
     const phoneInput = document.querySelector("#tel");
     const iti = window.intlTelInput(phoneInput, {
         initialCountry: "auto",
-        separateDialCode: true, // Affiche le code (+229, +33...) automatiquement devant le numéro
+        separateDialCode: true,
         geoIpLookup: callback => {
             fetch('https://ipapi.co/json/').then(res => res.json()).then(data => callback(data.country_code)).catch(() => callback("bj"));
         },
@@ -122,9 +115,8 @@
     }
 
     function validateForm() {
-        const dobValue = document.getElementById('dob').value;
+        const dobValue = document.getElementById('DateNaissance').value;
         const cguChecked = document.getElementById('cguCheck').checked;
-        const fileInput = document.getElementById('idFile');
         const submitBtn = document.getElementById('submitBtn');
         const ageError = document.getElementById('ageError');
 
@@ -141,13 +133,11 @@
             ageError.style.display = isAdult ? 'none' : 'block';
         }
 
-        const hasFile = fileInput.files.length > 0;
-        submitBtn.disabled = !(isAdult && cguChecked && hasFile);
+        submitBtn.disabled = !(isAdult && cguChecked);
     }
 
-    document.getElementById('dob').addEventListener('change', validateForm);
+    document.getElementById('DateNaissance').addEventListener('change', validateForm);
     document.getElementById('cguCheck').addEventListener('change', validateForm);
-    document.getElementById('idFile').addEventListener('change', validateForm);
 
     document.getElementById('adhForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -157,43 +147,36 @@
             finalBroker = document.getElementById('otherBrokerName').value;
         }
 
-        const fullPhoneNumber = iti.getNumber(); // Récupère le numéro complet avec le code pays choisi
+        const fullPhoneNumber = iti.getNumber();
         const countryData = iti.getSelectedCountryData();
 
-        const file = document.getElementById('idFile').files[0];
-        const reader = new FileReader();
-        reader.onloadend = function() {
-            const data = {
-                tg_id: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "Inconnu",
-                nom: document.getElementById('nom').value.toUpperCase(),
-                prenom: document.getElementById('prenom').value,
-                email: document.getElementById('email').value,
-                tel: fullPhoneNumber,
-                pays: countryData.name,
-                dob: document.getElementById('dob').value,
-                broker: finalBroker,
-                demo: document.getElementById('demo').value,
-                real: document.getElementById('real').value,
-                fileData: reader.result,
-                fileName: file.name
-            };
-
-            fetch('https://hook.eu1.make.com/dlld6ixonje6l4rmqv8h45m2k9xpg58b', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if(response.ok) {
-                    tg.showAlert("Inscription K2A envoyée avec succès !");
-                    tg.close(); 
-                }
-            })
-            .catch(error => {
-                tg.showAlert("Erreur réseau. Veuillez réessayer.");
-            });
+        const data = {
+            telegram_id: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "Inconnu",
+            nom: document.getElementById('nom').value.toUpperCase(),
+            prenom: document.getElementById('prenom').value,
+            email: document.getElementById('email').value,
+            tel: fullPhoneNumber,
+            pays: countryData.name,
+            DateNaissance: document.getElementById('DateNaissance').value,
+            broker: finalBroker,
+            demo: document.getElementById('demo').value,
+            real: document.getElementById('real').value
         };
-        reader.readAsDataURL(file);
+
+        fetch('https://hook.eu1.make.com/dlld6ixonje6l4rmqv8h45m2k9xpg58b', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if(response.ok) {
+                tg.showAlert("Inscription K2A envoyée avec succès !");
+                tg.close(); 
+            }
+        })
+        .catch(error => {
+            tg.showAlert("Erreur réseau. Veuillez réessayer.");
+        });
     });
 </script>
 
